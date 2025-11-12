@@ -766,10 +766,11 @@ def main():
         parser.print_help(sys.stdout)
         return 1
 
-    if arguments.agent and (arguments.openscenario or arguments.scenario):
-        print("Agents are currently only compatible with route scenarios'\n\n")
-        parser.print_help(sys.stdout)
-        return 1
+    # Removed restriction: agents now work with OpenSCENARIO scenarios
+    # if arguments.agent and (arguments.openscenario or arguments.scenario):
+    #     print("Agents are currently only compatible with route scenarios'\n\n")
+    #     parser.print_help(sys.stdout)
+    #     return 1
 
     if arguments.openscenarioparams and not arguments.openscenario:
         print(
