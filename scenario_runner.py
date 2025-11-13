@@ -32,6 +32,9 @@ import os
 import signal
 import sys
 import time
+from loguru import logger
+
+logger.add("local_rss/scenario_runner.log", level="INFO")
 
 try:
     # requires Python 3.8+
@@ -189,7 +192,7 @@ class ScenarioRunner(object):
             # Remove unused Python paths
             sys.path.pop(0)
 
-        print("Scenario '{}' not supported ... Exiting".format(scenario))
+        logger.info(f"Scenario '{scenario}' not supported ... Exiting")
         sys.exit(-1)
 
     def _cleanup(self):
@@ -226,7 +229,9 @@ class ScenarioRunner(object):
                     and self.ego_vehicles[i] is not None
                     and self.ego_vehicles[i].is_alive
                 ):
-                    print("Destroying ego vehicle {}".format(self.ego_vehicles[i].id))
+                    logger.info(
+                        "Destroying ego vehicle {}".format(self.ego_vehicles[i].id)
+                    )
                     self.ego_vehicles[i].destroy()
                 self.ego_vehicles[i] = None
         self.ego_vehicles = []
@@ -313,11 +318,11 @@ class ScenarioRunner(object):
         if not self.manager.analyze_scenario(
             self._args.output, filename, junit_filename, json_filename
         ):
-            print("All scenario tests were passed successfully!")
+            logger.info("All scenario tests were passed successfully!")
         else:
-            print("Not all scenario tests were successful")
+            logger.info("Not all scenario tests were successful")
             if not (self._args.output or filename or junit_filename):
-                print("Please run with --output for further information")
+                logger.info("Please run with --output for further information")
 
     def _record_criteria(self, criteria, name):
         """
@@ -369,7 +374,7 @@ class ScenarioRunner(object):
                                 ego_vehicle_found = True
                                 break
                         if not ego_vehicle_found:
-                            print("Not all ego vehicles ready. Waiting ... ")
+                            logger.info("Not all ego vehicles ready. Waiting ... ")
                             time.sleep(1)
                             break
 
@@ -392,8 +397,8 @@ class ScenarioRunner(object):
 
         map_name = CarlaDataProvider.get_map().name.split("/")[-1]
         if map_name not in (town, "OpenDriveMap"):
-            print("The CARLA server uses the wrong map: {}".format(map_name))
-            print("This scenario requires to use map: {}".format(town))
+            logger.info("The CARLA server uses the wrong map: {}".format(map_name))
+            logger.info("This scenario requires to use map: {}".format(town))
             return False
 
         return True
@@ -416,7 +421,7 @@ class ScenarioRunner(object):
                 config.agent = self.agent_instance
             except Exception as e:  # pylint: disable=broad-except
                 traceback.print_exc()
-                print("Could not setup required agent due to {}".format(e))
+                logger.info("Could not setup required agent due to {}".format(e))
                 self._cleanup()
                 return False
 
@@ -427,7 +432,7 @@ class ScenarioRunner(object):
             tm.set_synchronous_mode(True)
 
         # Prepare scenario
-        print("Preparing scenario: " + config.name)
+        logger.info("Preparing scenario: " + config.name)
         try:
             self._prepare_ego_vehicles(config.ego_vehicles)
             if self._args.openscenario:
@@ -458,11 +463,12 @@ class ScenarioRunner(object):
                     config=config,
                     randomize=self._args.randomize,
                     debug_mode=self._args.debug,
+                    criteria_enable=True,
                 )
         except Exception as exception:  # pylint: disable=broad-except
-            print("The scenario cannot be loaded")
+            logger.info("The scenario cannot be loaded")
             traceback.print_exc()
-            print(exception)
+            logger.info(exception)
             self._cleanup()
             return False
 
@@ -474,6 +480,7 @@ class ScenarioRunner(object):
                     config.name,
                 )
                 self.client.start_recorder(recorder_name, True)
+                logger.info(f"Recording scenario: {recorder_name}")
 
             # Load scenario and run it
             self.manager.load_scenario(scenario, self.agent_instance)
@@ -494,7 +501,7 @@ class ScenarioRunner(object):
 
         except Exception as e:  # pylint: disable=broad-except
             traceback.print_exc()
-            print(e)
+            logger.info(e)
             result = False
 
         self._cleanup()
@@ -513,7 +520,7 @@ class ScenarioRunner(object):
             )
         )
         if not scenario_configurations:
-            print(
+            logger.info(
                 "Configuration for scenario {} cannot be found!".format(
                     self._args.scenario
                 )
@@ -554,7 +561,7 @@ class ScenarioRunner(object):
 
         # Load the scenario configurations provided in the config file
         if not os.path.isfile(self._args.openscenario):
-            print("File does not exist")
+            logger.info("File does not exist")
             self._cleanup()
             return False
 
@@ -578,7 +585,7 @@ class ScenarioRunner(object):
         """
         # Load the scenario configurations provided in the config file
         if not os.path.isfile(self._args.openscenario2):
-            print("File does not exist")
+            logger.info("File does not exist")
             self._cleanup()
             return False
 
@@ -603,7 +610,7 @@ class ScenarioRunner(object):
         else:
             result = self._run_scenarios()
 
-        print("No more scenarios .... Exiting")
+        logger.info("No more scenarios .... Exiting")
         return result
 
 
@@ -742,8 +749,8 @@ def main():
     OSC2Helper.wait_for_ego = arguments.waitForEgo
 
     if arguments.list:
-        print("Currently the following scenarios are supported:")
-        print(
+        logger.info("Currently the following scenarios are supported:")
+        logger.info(
             *ScenarioConfigurationParser.get_list_of_scenarios(arguments.configFile),
             sep="\n",
         )
@@ -755,12 +762,12 @@ def main():
         and not arguments.route
         and not arguments.openscenario2
     ):
-        print("Please specify either a scenario or use the route mode\n\n")
+        logger.info("Please specify either a scenario or use the route mode\n\n")
         parser.print_help(sys.stdout)
         return 1
 
     if arguments.route and (arguments.openscenario or arguments.scenario):
-        print(
+        logger.info(
             "The route mode cannot be used together with a scenario (incl. OpenSCENARIO)'\n\n"
         )
         parser.print_help(sys.stdout)
@@ -768,12 +775,14 @@ def main():
 
     # Removed restriction: agents now work with OpenSCENARIO scenarios
     # if arguments.agent and (arguments.openscenario or arguments.scenario):
-    #     print("Agents are currently only compatible with route scenarios'\n\n")
+    #     logger.info("Agents are currently only compatible with route scenarios'\n\n")
     #     parser.print_help(sys.stdout)
     #     return 1
+    if not arguments.agent:
+        logger.warning("No agent specified. You may got stuck in the scenario manager.")
 
     if arguments.openscenarioparams and not arguments.openscenario:
-        print(
+        logger.info(
             "WARN: Ignoring --openscenarioparams when --openscenario is not specified"
         )
 

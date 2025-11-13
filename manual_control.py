@@ -138,6 +138,30 @@ class World(object):
         self.recording_enabled = False
         self.recording_start = 0
 
+    def _spawn_hero_vehicle(self):
+        """Spawn a hero vehicle if none exists"""
+        blueprint_library = self.world.get_blueprint_library()
+
+        # Get a vehicle blueprint
+        vehicle_bp = blueprint_library.filter("vehicle.*")[
+            0
+        ]  # Get first available vehicle
+        vehicle_bp.set_attribute("role_name", "hero")
+
+        # Get spawn points
+        spawn_points = self.map.get_spawn_points()
+        if spawn_points:
+            spawn_point = spawn_points[0]  # Use first spawn point
+
+            # Try to spawn the vehicle
+            self.player = self.world.try_spawn_actor(vehicle_bp, spawn_point)
+            if self.player:
+                print(f"Successfully spawned hero vehicle: {self.player.type_id}")
+            else:
+                print("Failed to spawn hero vehicle")
+        else:
+            print("No spawn points available")
+
     def restart(self, args):
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
@@ -160,6 +184,11 @@ class World(object):
                     print("Ego vehicle found")
                     self.player = vehicle
                     break
+
+            # If no hero vehicle found, spawn one
+            # if self.player is None:
+            #     print("No hero vehicle found, spawning one...")
+            #     self._spawn_hero_vehicle()
 
         self.player_name = self.player.type_id
 
