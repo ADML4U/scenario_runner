@@ -101,7 +101,7 @@ class RegionVisualizer:
     def capture_third_person_view(self, ego_vehicle):
         """Capture third-person view from ego vehicle"""
         logger.info(
-            f"Capturing third-person view from ego vehicle at coordinates ({self.args.x}, {self.args.y})"
+            f"Capturing third-person view from ego vehicle at coordinates ({int(self.args.x)}, {int(self.args.y)})"
         )
 
         if not ego_vehicle:
@@ -129,7 +129,7 @@ class RegionVisualizer:
             logger.info("Third-person camera spawned successfully")
 
             # Prepare image path
-            image_path = f"{self.output_dir}/{self.args.map}_third_person_x{self.args.x}_y{self.args.y}_r{int(self.args.radius)}.png"
+            image_path = f"{self.output_dir}/{self.args.map}_third_person_x{int(self.args.x)}_y{int(self.args.y)}_r{int(self.args.radius)}.png"
 
             # Remove existing file if it exists
             if os.path.exists(image_path):
@@ -277,7 +277,7 @@ class RegionVisualizer:
             logger.info("Camera spawned successfully")
 
             # Prepare image path
-            carla_image_path = f"{self.output_dir}/{self.args.map}_carla_birds_eye_x{self.args.x}_y{self.args.y}_r{int(self.args.radius)}.png"
+            carla_image_path = f"{self.output_dir}/{self.args.map}_carla_birds_eye_x{int(self.args.x)}_y{int(self.args.y)}_r{int(self.args.radius)}.png"
 
             # Remove existing file if it exists
             if os.path.exists(carla_image_path):
