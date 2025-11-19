@@ -98,7 +98,7 @@ class RegionVisualizer:
         )
         return closest_spawn, closest_index
 
-    def capture_third_person_view(self, ego_vehicle):
+    def capture_third_person_view(self, ego_vehicle, image_size: tuple[int, int]):
         """Capture third-person view from ego vehicle"""
         logger.info(
             f"Capturing third-person view from ego vehicle at coordinates ({int(self.args.x)}, {int(self.args.y)})"
@@ -113,8 +113,8 @@ class RegionVisualizer:
             # Set up camera
             blueprint_library = self.world.get_blueprint_library()
             camera_bp = blueprint_library.find("sensor.camera.rgb")
-            camera_bp.set_attribute("image_size_x", "1920")
-            camera_bp.set_attribute("image_size_y", "1080")
+            camera_bp.set_attribute("image_size_x", str(image_size[0]))
+            camera_bp.set_attribute("image_size_y", str(image_size[1]))
             camera_bp.set_attribute("fov", "90")
 
             # Position camera behind and above the ego vehicle for third-person view
@@ -440,7 +440,7 @@ class RegionVisualizer:
                 return False
 
             # Capture third-person view
-            if not self.capture_third_person_view(ego_vehicle):
+            if not self.capture_third_person_view(ego_vehicle, self.args.image_size):
                 logger.error("Failed to capture third-person view")
                 return False
 
@@ -499,6 +499,12 @@ def main():
         "--output_dir",
         default="local_rss/visualize_map/around_spawn_point",
         help="Output directory for the visualizations (default: local_rss/visualize_map/around_spawn_point)",
+    )
+    parser.add_argument(
+        "--image-size",
+        type=tuple[int, int],
+        default=(1920, 1080),
+        help="Image size (width, height) or (x,y) coordinates (default: 1920, 1080)",
     )
 
     args = parser.parse_args()
