@@ -124,7 +124,7 @@ class MapVisualization:
                 "index": i,
                 "location": {
                     "x": spawn_point.location.x,
-                    "y": spawn_point.location.y,
+                    "y": -spawn_point.location.y,
                     "z": spawn_point.location.z,
                 },
                 "rotation": {
